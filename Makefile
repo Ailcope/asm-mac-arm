@@ -14,7 +14,7 @@ run: build $(PY)
 build: $(OBJ)
 
 build/%.o: %.asm
-	@mkdir -p build
+	@mkdir -p $(dir $@)
 	nasm -f elf64 $< -o $@
 
 $(PY):

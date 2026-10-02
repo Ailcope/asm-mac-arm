@@ -31,7 +31,13 @@ make run SRC=autre.asm    # lance un autre fichier
 make clean                # supprime build/ et .venv
 ```
 
-Pour utiliser ton propre code, remplace `bits64.asm` ou passe ton fichier avec `SRC=`. Il doit déclarer `global _start`.
+Pour choisir le fichier à lancer, passe son chemin avec `SRC=` (il peut être dans un sous-dossier) :
+
+```
+make run SRC=tp/exercice2.asm
+```
+
+Le fichier doit déclarer `global _start`, et son chemin ne doit pas contenir d'espace (limite de `make`).
 
 ## Limites
 
