@@ -86,6 +86,12 @@ Si ça marche, tu vois :
 Tout est bon jusqu'à cette ligne ;)
 ```
 
+Pour voir les registres à la fin du programme (pratique quand l'exercice stocke un résultat dans `RAX`, `RBX`, `RDX`… sans rien afficher), ajoute `-r` :
+
+```
+macasm -r division.asm
+```
+
 Autres commandes, depuis le dossier du dépôt :
 
 ```
@@ -99,7 +105,7 @@ Si `/opt/homebrew/bin` n'existe pas ou n'est pas accessible : `make install BIN=
 
 ## Limites
 
-- Seuls les syscalls `read`, `write`, `exit` et `exit_group` sont émulés. Les autres affichent `[syscall N non émulé]` et renvoient une erreur.
+- Seuls les syscalls `read`, `write`, `exit` et `exit_group` sont émulés, avec les numéros Linux (`1`, `60`) et aussi ceux de macOS (`0x2000004`, `0x2000001`), au cas où le code a déjà été adapté. Les autres affichent `[syscall N non émulé]` et renvoient une erreur.
 - Pas de débogueur pas à pas.
 - Code utilisateur uniquement (pas de libc, pas de linkage avec des bibliothèques).
 

@@ -3,7 +3,7 @@
 
 Charge le .o en mémoire, applique les relocations, puis émule le code avec
 Unicorn en traduisant les syscalls Linux (write, exit, exit_group, read...).
-Usage : run_elf64.py fichier.o
+Usage : run_elf64.py [--regs] fichier.o
 """
 import struct
 import sys
@@ -18,6 +18,21 @@ PAGE = 0x1000
 
 SHF_ALLOC = 2
 SHT_NOBITS = 8
+
+
+# syscalls macOS (0x2000000 + n) vers Linux : exit, read, write
+MACOS_TO_LINUX = {1: 60, 3: 0, 4: 1}
+
+REGS = ["RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "RBP", "RSP",
+        "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15"]
+
+
+def dump_regs(uc):
+    print("--- registres à la sortie ---", file=sys.stderr)
+    for r in REGS:
+        v = uc.reg_read(getattr(sys.modules[__name__], "UC_X86_REG_" + r))
+        signed = v - 2**64 if v >> 63 else v
+        print(f"{r:<4} = 0x{v:016x}  ({v} / signé {signed})", file=sys.stderr)
 
 
 def cstr(blob, off):
@@ -99,9 +114,11 @@ def load(path):
 
 
 def main():
-    if len(sys.argv) != 2:
+    args = [a for a in sys.argv[1:] if a != "--regs"]
+    show_regs = len(args) != len(sys.argv) - 1
+    if len(args) != 1:
         sys.exit(__doc__)
-    mem, entry = load(sys.argv[1])
+    mem, entry = load(args[0])
     uc = Uc(UC_ARCH_X86, UC_MODE_64)
     uc.mem_map(BASE, len(mem))
     uc.mem_write(BASE, mem)
@@ -117,6 +134,8 @@ def main():
         a2 = uc.reg_read(UC_X86_REG_RSI)
         a3 = uc.reg_read(UC_X86_REG_RDX)
         ret = -38  # ENOSYS
+        if nr & 0x2000000:  # numéros macOS (classe BSD) -> équivalents Linux
+            nr = MACOS_TO_LINUX.get(nr & 0xFFFFFF, nr)
         if nr == 1:  # write
             data = bytes(uc.mem_read(a2, a3))
             if a1 == 2:
@@ -143,6 +162,8 @@ def main():
         uc.emu_start(entry, 0)
     except UcError as e:
         sys.exit(f"Crash émulation : {e} (RIP=0x{uc.reg_read(UC_X86_REG_RIP):x})")
+    if show_regs:
+        dump_regs(uc)
     if state["code"] is None:
         sys.exit("Programme terminé sans syscall exit (il tombe hors du code ?)")
     sys.exit(state["code"])

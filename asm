@@ -12,8 +12,10 @@ while [ -L "$SELF" ]; do
 done
 ROOT="$(cd "$(dirname "$SELF")" && pwd)"
 
+OPT=""
+if [ "${1:-}" = "-r" ]; then OPT="--regs"; shift; fi
 SRC="${1:-}"
-[ -n "$SRC" ] || { echo "Usage : macasm fichier.asm" >&2; exit 1; }
+[ -n "$SRC" ] || { echo "Usage : macasm [-r] fichier.asm   (-r : affiche les registres à la fin)" >&2; exit 1; }
 command -v nasm >/dev/null || { echo "nasm introuvable : brew install nasm" >&2; exit 1; }
 [ -f "$SRC" ] || { echo "Fichier introuvable : $SRC" >&2; exit 1; }
 
@@ -29,4 +31,4 @@ OBJ="$TMP/$(basename "${SRC%.asm}").o"
 echo "[1/2] nasm -f elf64 $SRC -> .o" >&2
 nasm -f elf64 "$SRC" -o "$OBJ"
 echo "[2/2] exécution (x86-64 Linux émulé)" >&2
-"$ROOT/.venv/bin/python" "$ROOT/tools/run_elf64.py" "$OBJ"
+"$ROOT/.venv/bin/python" "$ROOT/tools/run_elf64.py" $OPT "$OBJ"
