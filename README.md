@@ -52,7 +52,7 @@ Ici, on ne touche à rien : le `.asm` reste celui du cours.
 
 ## Comment ça marche
 
-Le code est assemblé avec NASM en ELF64 (le vrai format Linux), puis chargé en mémoire et exécuté dans un émulateur x86-64 (Unicorn, en Python). Les syscalls Linux sont traduits à la volée. Il n'y a donc plus d'étape `ld` ni `gcc`, c'est elle qui posait problème.
+Le code est assemblé avec NASM en ELF64 (le vrai format Linux), puis chargé en mémoire et exécuté dans un émulateur x86-64 (Unicorn, en Python). Les syscalls Linux sont traduits à la volée. Il n'y a donc plus d'étape `ld` ni `gcc`, celle qui posait problème.
 
 ## Installation
 
@@ -62,36 +62,40 @@ Il faut Homebrew. Ensuite :
 brew install nasm
 git clone https://github.com/Ailcope/asm-mac-arm.git
 cd asm-mac-arm
-./asm bits64.asm
+make install
 ```
 
-Au premier lancement, un dossier `.venv` est créé et `unicorn` y est installé (Python 3 est déjà présent sur macOS, sinon `brew install python`).
+`make install` crée la commande `macasm` (un lien dans `/opt/homebrew/bin`), utilisable depuis n'importe quel dossier. Au premier lancement, un dossier `.venv` est créé dans le dépôt et `unicorn` y est installé (Python 3 est déjà présent sur macOS, sinon `brew install python`).
+
+## Utilisation
+
+Où que tu sois dans le Mac, tu passes ton `.asm` en argument :
+
+```
+cd ~/mes-cours/tp3
+macasm exercice2.asm
+```
+
+Ça fait le `.o` (dans un dossier temporaire, rien ne traîne chez toi) puis l'exécution. Le fichier doit déclarer `global _start`. Les sous-dossiers et les espaces dans les noms marchent.
 
 Si ça marche, tu vois :
 
 ```
-[1/2] nasm -f elf64 bits64.asm -> build/bits64.o
+[1/2] nasm -f elf64 exercice2.asm -> .o
 [2/2] exécution (x86-64 Linux émulé)
 Tout est bon jusqu'à cette ligne ;)
 ```
 
-## Utilisation
-
-Tu mets ton `.asm` où tu veux (dans un sous-dossier aussi) et tu le passes en argument :
-
-```
-./asm tp/exercice2.asm
-```
-
-Ça fait le `.o` (dans `build/`) puis l'exécution. Le fichier doit déclarer `global _start`.
-
-Avec `make` ça marche aussi (sans espace dans le chemin) :
+Autres commandes, depuis le dossier du dépôt :
 
 ```
 make run                     # lance bits64.asm
 make run SRC=tp/exercice2.asm
-make clean                   # supprime build/ et .venv
+make uninstall               # retire macasm
+make clean                   # supprime .venv
 ```
+
+Si `/opt/homebrew/bin` n'existe pas ou n'est pas accessible : `make install BIN=~/.local/bin` (et ajoute ce dossier à ton `PATH`).
 
 ## Limites
 
