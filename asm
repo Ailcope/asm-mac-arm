@@ -19,10 +19,12 @@ SRC="${1:-}"
 command -v nasm >/dev/null || { echo "nasm introuvable : brew install nasm" >&2; exit 1; }
 [ -f "$SRC" ] || { echo "Fichier introuvable : $SRC" >&2; exit 1; }
 
-if [ ! -x "$ROOT/.venv/bin/python" ]; then
+# Venv absent, cassé (Python mis à jour ou supprimé par brew) ou sans unicorn : on le refait.
+# --clear est indispensable : sans lui, venv garde les anciens liens python cassés.
+if ! "$ROOT/.venv/bin/python" -c 'import unicorn' 2>/dev/null; then
     echo "[setup] création de .venv et installation de unicorn (une seule fois)" >&2
-    python3 -m venv "$ROOT/.venv"
-    "$ROOT/.venv/bin/pip" install -q unicorn 2>/dev/null
+    python3 -m venv --clear "$ROOT/.venv"
+    "$ROOT/.venv/bin/python" -m pip install -q unicorn 2>/dev/null
 fi
 
 TMP="$(mktemp -d)"
